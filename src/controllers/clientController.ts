@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ClientRequest, ClientResponse, Client } from '../types';
+import { ClientRequest, ClientResponse, Client, CardType } from '../types';
 import { CardService } from '../services/cardService';
 
 export class ClientController {
@@ -8,13 +8,14 @@ export class ClientController {
 
   static registerClient(req: Request, res: Response): void {
     try {
-      // Map cardType string to CardType enum
+      // Map cardType string to CardType enum robustly
       let clientData: ClientRequest = req.body;
-      // Defensive: if cardType is a string, map to enum
       if (typeof clientData.cardType === 'string') {
-        const { CardType } = require('../types');
-        if (Object.values(CardType).includes(clientData.cardType)) {
-          clientData.cardType = clientData.cardType as any;
+        const cardTypeValue = Object.values(CardType).find(
+          v => v.toLowerCase() === clientData.cardType.toLowerCase()
+        );
+        if (cardTypeValue) {
+          clientData.cardType = cardTypeValue as CardType;
         } else {
           res.status(400).json({
             status: 'Rejected',
