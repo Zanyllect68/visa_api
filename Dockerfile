@@ -5,12 +5,16 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
 # Install ALL dependencies (including devDependencies for building)
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY src ./src
+
+# Debug: List files to ensure they're copied
+RUN ls -la && ls -la src/
 
 # Build the application
 RUN npm run build
