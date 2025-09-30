@@ -2,42 +2,63 @@ name: Build container and run VISE API testing
 
 on:
   workflow_dispatch:
-    # A la hora de ejecutar la acción pedir los siguientes atributos
     inputs:
       PORT:
         description: 'The port of your application'
         required: true
         default: "3000"
 
-# Tareas a ejecutar
 jobs:
   test:
-    # SO de la maquina virtual
     runs-on: ubuntu-latest
-    # Pasos a seguir
     steps:
-      # Descargar el código del repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Instalar docker
       - name: Setup docker
         uses: docker/setup-buildx-action@v3
 
-      # Construir imagen de docker
       - name: Build docker image
         run: |
           docker build -t vise-api:latest .
 
-      # Levantar contenedor
       - name: Run container
         run: |
           docker run -d -p ${{ github.event.inputs.PORT }}:${{ github.event.inputs.PORT }} --name vise-api vise-api:latest
           sleep 5
 
-      # Instalar hurl
+      - name: Check container status
+        run: |
+          echo "=== Container Status ==="
+          docker ps -a
+          echo ""
+          echo "=== Initial Container Logs ==="
+          docker logs vise-api
+
+      - name: Test health endpoint
+        run: |
+          echo "Testing health endpoint..."
+          curl -f http://localhost:${{ github.event.inputs.PORT }}/health
+
       - name: Setup hurl (API testing tool)
         uses: gacts/install-hurl@v1
 
       - name: Test API
+        id: api_tests
+        continue-on-error: true
         run: hurl --variable host=http://localhost:${{ github.event.inputs.PORT }} --error-format long --test session.hurl
+
+      - name: Show logs on test failure
+        if: steps.api_tests.outcome == 'failure'
+        run: |
+          echo "=== Container Logs After Test Failure ==="
+          docker logs vise-api
+          echo ""
+          echo "=== Manual Test Request ==="
+          curl -v -X POST http://localhost:${{ github.event.inputs.PORT }}/client \
+            -H "Content-Type: application/json" \
+            -d '{"name":"Alice Classic","country":"USA","monthlyIncome":100,"viseClub":false,"cardType":"Classic"}'
+
+      - name: Fail if tests failed
+        if: steps.api_tests.outcome == 'failure'
+        run: exit 1
