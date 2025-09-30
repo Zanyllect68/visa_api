@@ -1,13 +1,4 @@
-Guia: GitHub Actions
-1. Asegurate que el repositorio tenga los archivos Dockerfile y session.yaml
-proyecto-vise/
-├─ Dockerfile
-├─ session.hurl
-├─ el resto del código
-2. Nos ubicamos en el repositorio de nuesta API VISE y nos dirigimos a la sección Actions
-3. Creamos un workflow en blanco
-4. Ingresamos las instrucciones de la acción:
-# Nombre de la action
+
 name: Build container and run VISE API testing
 
 on:
