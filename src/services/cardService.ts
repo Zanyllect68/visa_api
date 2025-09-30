@@ -4,6 +4,8 @@ export class CardService {
   private static restrictedCountries = ['China', 'Vietnam', 'India', 'Iran'];
 
   static validateCardEligibility(client: Omit<Client, 'clientId'>): { isValid: boolean; error?: string } {
+    console.log('Validating card type:', client.cardType, 'Type:', typeof client.cardType);
+    console.log('CardType.CLASSIC:', CardType.CLASSIC, 'Comparison:', client.cardType === CardType.CLASSIC);
     switch (client.cardType) {
       case CardType.CLASSIC:
         return { isValid: true };

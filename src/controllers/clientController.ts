@@ -8,7 +8,21 @@ export class ClientController {
 
   static registerClient(req: Request, res: Response): void {
     try {
-      const clientData: ClientRequest = req.body;
+      // Map cardType string to CardType enum
+      let clientData: ClientRequest = req.body;
+      // Defensive: if cardType is a string, map to enum
+      if (typeof clientData.cardType === 'string') {
+        const { CardType } = require('../types');
+        if (Object.values(CardType).includes(clientData.cardType)) {
+          clientData.cardType = clientData.cardType as any;
+        } else {
+          res.status(400).json({
+            status: 'Rejected',
+            error: 'Tipo de tarjeta no válido'
+          } as ClientResponse);
+          return;
+        }
+      }
       
       // Validate input
       if (!clientData.name || !clientData.country || !clientData.cardType || 
@@ -49,6 +63,7 @@ export class ClientController {
 
       res.status(201).json(response);
     } catch (error) {
+      console.error('Error in registerClient:', error);
       res.status(500).json({
         status: 'Rejected',
         error: 'Error interno del servidor'
