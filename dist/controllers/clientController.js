@@ -72,7 +72,7 @@ class ClientController {
                 status: 'Registered',
                 message: `Cliente apto para tarjeta ${newClient.cardType}`
             };
-            res.status(201).json(response);
+            res.status(200).json(response); // Changed from 201 to 200
         }
         catch (error) {
             console.error('Error in registerClient:', error);
