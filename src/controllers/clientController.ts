@@ -8,32 +8,54 @@ export class ClientController {
 
   static registerClient(req: Request, res: Response): void {
     try {
-      // Map cardType string to CardType enum robustly
-      let clientData: ClientRequest = req.body;
-      if (typeof clientData.cardType === 'string') {
-        const cardTypeValue = Object.values(CardType).find(
-          v => v.toLowerCase() === clientData.cardType.toLowerCase()
-        );
-        if (cardTypeValue) {
-          clientData.cardType = cardTypeValue as CardType;
-        } else {
-          res.status(400).json({
-            status: 'Rejected',
-            error: 'Tipo de tarjeta no válido'
-          } as ClientResponse);
-          return;
-        }
-      }
+      const body = req.body;
       
-      // Validate input
-      if (!clientData.name || !clientData.country || !clientData.cardType || 
-          typeof clientData.monthlyIncome !== 'number' || typeof clientData.viseClub !== 'boolean') {
+      // Validate input exists
+      if (!body.name || !body.country || !body.cardType || 
+          typeof body.monthlyIncome !== 'number' || 
+          typeof body.viseClub !== 'boolean') {
         res.status(400).json({
           status: 'Rejected',
           error: 'Datos incompletos'
-        } as ClientResponse);
+        });
         return;
       }
+
+      // Map cardType string to CardType enum
+      let cardType: CardType;
+      const cardTypeStr = String(body.cardType);
+      
+      switch (cardTypeStr) {
+        case 'Classic':
+          cardType = CardType.CLASSIC;
+          break;
+        case 'Gold':
+          cardType = CardType.GOLD;
+          break;
+        case 'Platinum':
+          cardType = CardType.PLATINUM;
+          break;
+        case 'Black':
+          cardType = CardType.BLACK;
+          break;
+        case 'White':
+          cardType = CardType.WHITE;
+          break;
+        default:
+          res.status(400).json({
+            status: 'Rejected',
+            error: 'Tipo de tarjeta no válido'
+          });
+          return;
+      }
+
+      const clientData: Omit<Client, 'clientId'> = {
+        name: body.name,
+        country: body.country,
+        monthlyIncome: body.monthlyIncome,
+        viseClub: body.viseClub,
+        cardType: cardType
+      };
 
       // Check card eligibility
       const eligibility = CardService.validateCardEligibility(clientData);
@@ -42,7 +64,7 @@ export class ClientController {
         res.status(400).json({
           status: 'Rejected',
           error: eligibility.error
-        } as ClientResponse);
+        });
         return;
       }
 
@@ -68,7 +90,7 @@ export class ClientController {
       res.status(500).json({
         status: 'Rejected',
         error: 'Error interno del servidor'
-      } as ClientResponse);
+      });
     }
   }
 

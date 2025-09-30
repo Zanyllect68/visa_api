@@ -6,30 +6,50 @@ const cardService_1 = require("../services/cardService");
 class ClientController {
     static registerClient(req, res) {
         try {
-            // Map cardType string to CardType enum robustly
-            let clientData = req.body;
-            if (typeof clientData.cardType === 'string') {
-                const cardTypeValue = Object.values(types_1.CardType).find(v => v.toLowerCase() === clientData.cardType.toLowerCase());
-                if (cardTypeValue) {
-                    clientData.cardType = cardTypeValue;
-                }
-                else {
-                    res.status(400).json({
-                        status: 'Rejected',
-                        error: 'Tipo de tarjeta no válido'
-                    });
-                    return;
-                }
-            }
-            // Validate input
-            if (!clientData.name || !clientData.country || !clientData.cardType ||
-                typeof clientData.monthlyIncome !== 'number' || typeof clientData.viseClub !== 'boolean') {
+            const body = req.body;
+            // Validate input exists
+            if (!body.name || !body.country || !body.cardType ||
+                typeof body.monthlyIncome !== 'number' ||
+                typeof body.viseClub !== 'boolean') {
                 res.status(400).json({
                     status: 'Rejected',
                     error: 'Datos incompletos'
                 });
                 return;
             }
+            // Map cardType string to CardType enum
+            let cardType;
+            const cardTypeStr = String(body.cardType);
+            switch (cardTypeStr) {
+                case 'Classic':
+                    cardType = types_1.CardType.CLASSIC;
+                    break;
+                case 'Gold':
+                    cardType = types_1.CardType.GOLD;
+                    break;
+                case 'Platinum':
+                    cardType = types_1.CardType.PLATINUM;
+                    break;
+                case 'Black':
+                    cardType = types_1.CardType.BLACK;
+                    break;
+                case 'White':
+                    cardType = types_1.CardType.WHITE;
+                    break;
+                default:
+                    res.status(400).json({
+                        status: 'Rejected',
+                        error: 'Tipo de tarjeta no válido'
+                    });
+                    return;
+            }
+            const clientData = {
+                name: body.name,
+                country: body.country,
+                monthlyIncome: body.monthlyIncome,
+                viseClub: body.viseClub,
+                cardType: cardType
+            };
             // Check card eligibility
             const eligibility = cardService_1.CardService.validateCardEligibility(clientData);
             if (!eligibility.isValid) {
