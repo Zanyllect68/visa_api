@@ -1,3 +1,13 @@
+Guia: GitHub Actions
+1. Asegurate que el repositorio tenga los archivos Dockerfile y session.yaml
+proyecto-vise/
+├─ Dockerfile
+├─ session.hurl
+├─ el resto del código
+2. Nos ubicamos en el repositorio de nuesta API VISE y nos dirigimos a la sección Actions
+3. Creamos un workflow en blanco
+4. Ingresamos las instrucciones de la acción:
+# Nombre de la action
 name: Build container and run VISE API testing
 
 on:
@@ -27,44 +37,8 @@ jobs:
           docker run -d -p ${{ github.event.inputs.PORT }}:${{ github.event.inputs.PORT }} --name vise-api vise-api:latest
           sleep 5
 
-      - name: Check container status
-        run: |
-          echo "=== Container Status ==="
-          docker ps -a
-          echo ""
-          echo "=== Initial Container Logs ==="
-          docker logs vise-api
-
-      - name: Test health endpoint
-        run: |
-          echo "Testing health endpoint..."
-          curl -f http://localhost:${{ github.event.inputs.PORT }}/health
-
       - name: Setup hurl (API testing tool)
         uses: gacts/install-hurl@v1
 
       - name: Test API
-        id: api_tests
-        continue-on-error: true
         run: hurl --variable host=http://localhost:${{ github.event.inputs.PORT }} --error-format long --test session.hurl
-
-      - name: Show logs on test failure
-        if: steps.api_tests.outcome == 'failure'
-        run: |
-          echo "=== Container Logs After Test Failure ==="
-          docker logs vise-api
-          echo ""
-          echo "=== Manual Test Request ==="
-          curl -v -X POST http://localhost:${{ github.event.inputs.PORT }}/client \
-            -H "Content-Type: application/json" \
-            -d '{"name":"Alice Classic","country":"USA","monthlyIncome":100,"viseClub":false,"cardType":"Classic"}'
-          echo ""
-          echo "=== Container Inspect ==="
-          docker inspect vise-api
-          echo ""
-          echo "=== Environment Variables ==="
-          docker exec vise-api printenv || true
-
-      - name: Fail if tests failed
-        if: steps.api_tests.outcome == 'failure'
-        run: exit 1
