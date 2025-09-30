@@ -87,11 +87,11 @@ export class ClientController {
 
       // Register client
       const newClient: Client = {
-        clientId: this.nextId++,
+        clientId: ClientController.nextId++,
         ...clientData
       };
 
-      this.clients.push(newClient);
+      ClientController.clients.push(newClient);
       console.log('Client registered with ID:', newClient.clientId);
 
       const response: ClientResponse = {
@@ -120,6 +120,6 @@ export class ClientController {
   }
 
   static getClient(clientId: number): Client | undefined {
-    return this.clients.find(client => client.clientId === clientId);
+    return ClientController.clients.find(client => client.clientId === clientId);
   }
 }

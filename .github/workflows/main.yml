@@ -58,6 +58,12 @@ jobs:
           curl -v -X POST http://localhost:${{ github.event.inputs.PORT }}/client \
             -H "Content-Type: application/json" \
             -d '{"name":"Alice Classic","country":"USA","monthlyIncome":100,"viseClub":false,"cardType":"Classic"}'
+          echo ""
+          echo "=== Container Inspect ==="
+          docker inspect vise-api
+          echo ""
+          echo "=== Environment Variables ==="
+          docker exec vise-api printenv || true
 
       - name: Fail if tests failed
         if: steps.api_tests.outcome == 'failure'

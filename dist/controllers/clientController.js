@@ -72,10 +72,10 @@ class ClientController {
             console.log('Client is eligible, registering...');
             // Register client
             const newClient = {
-                clientId: this.nextId++,
+                clientId: ClientController.nextId++,
                 ...clientData
             };
-            this.clients.push(newClient);
+            ClientController.clients.push(newClient);
             console.log('Client registered with ID:', newClient.clientId);
             const response = {
                 clientId: newClient.clientId,
@@ -101,7 +101,7 @@ class ClientController {
         }
     }
     static getClient(clientId) {
-        return this.clients.find(client => client.clientId === clientId);
+        return ClientController.clients.find(client => client.clientId === clientId);
     }
 }
 exports.ClientController = ClientController;
