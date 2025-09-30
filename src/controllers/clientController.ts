@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ClientRequest, ClientResponse, Client, CardType } from '../types';
+import { ClientResponse, Client, CardType } from '../types';
 import { CardService } from '../services/cardService';
 
 export class ClientController {
@@ -8,12 +8,15 @@ export class ClientController {
 
   static registerClient(req: Request, res: Response): void {
     try {
+      console.log('=== Received request body:', JSON.stringify(req.body, null, 2));
+      
       const body = req.body;
       
       // Validate input exists
       if (!body.name || !body.country || !body.cardType || 
           typeof body.monthlyIncome !== 'number' || 
           typeof body.viseClub !== 'boolean') {
+        console.log('Validation failed: incomplete data');
         res.status(400).json({
           status: 'Rejected',
           error: 'Datos incompletos'
@@ -21,9 +24,13 @@ export class ClientController {
         return;
       }
 
+      console.log('Input validation passed');
+
       // Map cardType string to CardType enum
       let cardType: CardType;
       const cardTypeStr = String(body.cardType);
+      
+      console.log('Converting cardType:', cardTypeStr);
       
       switch (cardTypeStr) {
         case 'Classic':
@@ -42,12 +49,15 @@ export class ClientController {
           cardType = CardType.WHITE;
           break;
         default:
+          console.log('Invalid card type:', cardTypeStr);
           res.status(400).json({
             status: 'Rejected',
             error: 'Tipo de tarjeta no válido'
           });
           return;
       }
+
+      console.log('CardType converted to:', cardType);
 
       const clientData: Omit<Client, 'clientId'> = {
         name: body.name,
@@ -57,16 +67,23 @@ export class ClientController {
         cardType: cardType
       };
 
+      console.log('ClientData created:', JSON.stringify(clientData, null, 2));
+
       // Check card eligibility
+      console.log('Checking eligibility...');
       const eligibility = CardService.validateCardEligibility(clientData);
+      console.log('Eligibility result:', JSON.stringify(eligibility, null, 2));
       
       if (!eligibility.isValid) {
+        console.log('Client not eligible');
         res.status(400).json({
           status: 'Rejected',
           error: eligibility.error
         });
         return;
       }
+
+      console.log('Client is eligible, registering...');
 
       // Register client
       const newClient: Client = {
@@ -75,6 +92,7 @@ export class ClientController {
       };
 
       this.clients.push(newClient);
+      console.log('Client registered with ID:', newClient.clientId);
 
       const response: ClientResponse = {
         clientId: newClient.clientId,
@@ -84,12 +102,19 @@ export class ClientController {
         message: `Cliente apto para tarjeta ${newClient.cardType}`
       };
 
-      res.status(200).json(response);  // Changed from 201 to 200
+      console.log('Sending response:', JSON.stringify(response, null, 2));
+      res.status(200).json(response);
     } catch (error) {
-      console.error('Error in registerClient:', error);
+      console.error('=== ERROR in registerClient ===');
+      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Request body:', JSON.stringify(req.body, null, 2));
+      
       res.status(500).json({
         status: 'Rejected',
-        error: 'Error interno del servidor'
+        error: 'Error interno del servidor',
+        debug: error instanceof Error ? error.message : String(error)
       });
     }
   }
