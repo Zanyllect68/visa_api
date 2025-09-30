@@ -4,6 +4,8 @@ exports.CardService = void 0;
 const types_1 = require("../types");
 class CardService {
     static validateCardEligibility(client) {
+        console.log('Validating card type:', client.cardType, 'Type:', typeof client.cardType);
+        console.log('CardType.CLASSIC:', types_1.CardType.CLASSIC, 'Comparison:', client.cardType === types_1.CardType.CLASSIC);
         switch (client.cardType) {
             case types_1.CardType.CLASSIC:
                 return { isValid: true };

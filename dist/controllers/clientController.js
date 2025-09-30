@@ -1,11 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientController = void 0;
+const types_1 = require("../types");
 const cardService_1 = require("../services/cardService");
 class ClientController {
     static registerClient(req, res) {
         try {
-            const clientData = req.body;
+            // Map cardType string to CardType enum robustly
+            let clientData = req.body;
+            if (typeof clientData.cardType === 'string') {
+                const cardTypeValue = Object.values(types_1.CardType).find(v => v.toLowerCase() === clientData.cardType.toLowerCase());
+                if (cardTypeValue) {
+                    clientData.cardType = cardTypeValue;
+                }
+                else {
+                    res.status(400).json({
+                        status: 'Rejected',
+                        error: 'Tipo de tarjeta no válido'
+                    });
+                    return;
+                }
+            }
             // Validate input
             if (!clientData.name || !clientData.country || !clientData.cardType ||
                 typeof clientData.monthlyIncome !== 'number' || typeof clientData.viseClub !== 'boolean') {
@@ -40,6 +55,7 @@ class ClientController {
             res.status(201).json(response);
         }
         catch (error) {
+            console.error('Error in registerClient:', error);
             res.status(500).json({
                 status: 'Rejected',
                 error: 'Error interno del servidor'
